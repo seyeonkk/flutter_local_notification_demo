@@ -69,3 +69,5 @@ dependencies:
   flutter_local_notifications: ^17.1.2
   flutter_timezone: ^1.0.4
 ```
+- https://pub.dev/packages/flutter_timezone
+- https://pub.dev/packages/flutter_local_notifications
