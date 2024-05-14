@@ -62,3 +62,10 @@ buildscript {
     </intent-filter>
 </receiver>
 ```
+## pubspec.yaml
+```
+dependencies:
+  ...
+  flutter_local_notifications: ^17.1.2
+  flutter_timezone: ^1.0.4
+```
