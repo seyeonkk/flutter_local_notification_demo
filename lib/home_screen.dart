@@ -15,7 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    LocalNotification().requestPermissions();
+    LocalNotification.instance.requestPermissions();
   }
 
   @override
@@ -33,23 +33,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 PaddedElevatedButton(
                   buttonText: 'Show notification',
                   onPressed: () async {
-                    await LocalNotification().showNotification(messageId: 0);
+                    await LocalNotification.instance.showNotification(messageId: 0);
                   },
                 ),
-                if (kIsWeb || !Platform.isLinux)...[
+                if (kIsWeb || !Platform.isLinux) ...[
                   PaddedElevatedButton(
-                    buttonText:
-                    'Schedule notification to appear in 5 seconds '
+                    buttonText: 'Schedule notification to appear in 10 seconds '
                         'based on local time zone',
                     onPressed: () async {
-                      await LocalNotification().zonedScheduleNotification(messageId: 0);
+                      await LocalNotification.instance.zonedScheduleNotification(
+                        messageId: 0,
+                        year: 2024,
+                        month: 5,
+                        day: 15,
+                        hour: 21,
+                        minute: 15,
+                      );
                     },
                   ),
                 ],
                 PaddedElevatedButton(
                   buttonText: 'Cancel notification',
                   onPressed: () async {
-                    await LocalNotification().cancelNotification(0);
+                    await LocalNotification.instance.cancelNotification(0);
                   },
                 ),
               ],
@@ -60,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 
 class PaddedElevatedButton extends StatelessWidget {
   const PaddedElevatedButton({
@@ -74,10 +79,10 @@ class PaddedElevatedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-    child: ElevatedButton(
-      onPressed: onPressed,
-      child: Text(buttonText),
-    ),
-  );
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          child: Text(buttonText),
+        ),
+      );
 }
