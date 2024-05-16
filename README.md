@@ -72,6 +72,6 @@ buildscript {
 dependencies:
   ...
   flutter_local_notifications: ^17.1.2
-  flutter_timezone: ^1.0.4
+  flutter_timezone: ^1.0.4 // 지금은 seoul로 직접 설정했지만, 자동으로 local location을 설정하고 싶은 경우
 ```
 - https://pub.dev/packages/flutter_local_notifications
