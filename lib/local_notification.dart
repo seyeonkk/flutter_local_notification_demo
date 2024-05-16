@@ -80,7 +80,8 @@ class LocalNotification {
           enableLights: true,
           enableVibration: false,
           showBadge: true,
-          sound: RawResourceAndroidNotificationSound(params.sound ?? 'default_sound'),
+          sound: RawResourceAndroidNotificationSound(
+              params.sound ?? 'default_sound'),
           playSound: true);
     }
     if (targetChannel == null) {
@@ -120,7 +121,8 @@ class LocalNotification {
     await _plugin.cancel(messageId);
   }
 
-  Future<void> zonedScheduleNotification(ScheduledNotificationParams params) async {
+  Future<void> zonedScheduleNotification(
+      ScheduledNotificationParams params) async {
     AndroidNotificationChannel? targetChannel;
     if (_androidChannels?.isNotEmpty ?? false) {
       if (params.channelId != null) {
@@ -147,11 +149,13 @@ class LocalNotification {
         params.messageId,
         params.title ?? 'scheduled title',
         params.body ?? 'scheduled body',
-        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)),
-        // tz.TZDateTime(tz.local, year, month, day, hour, minute).subtract(
-        //     Duration(
-        //         days: durationDay, hours: durationHour, minutes: durationMin)),
-
+        //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)),
+        tz.TZDateTime(tz.local, params.year, params.month, params.day,
+                params.hour, params.minute)
+            .subtract(Duration(
+                days: params.durationDay,
+                hours: params.durationHour,
+                minutes: params.durationMin)),
         NotificationDetails(
             android: AndroidNotificationDetails(
           targetChannel.id,
@@ -211,6 +215,23 @@ class LocalNotification {
       },
     );
   }
+
+  Future<void> getAndroidChannels() async {
+    AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) {
+      return;
+    }
+    List<AndroidNotificationChannel>? currentChannels =
+    await androidPlugin.getNotificationChannels();
+
+    final List<PendingNotificationRequest> pendingNotificationRequests =
+    await _plugin.pendingNotificationRequests();
+
+    print('등록된 안드로이드 채널 목록 $currentChannels');
+    print('처리 예정인 알림 목록 $pendingNotificationRequests');
+  }
 }
 
 class ScheduledNotificationParams {
@@ -229,9 +250,9 @@ class ScheduledNotificationParams {
   final int day;
   final int hour;
   final int minute;
-  final int? durationDay;
-  final int? durationHour;
-  final int? durationMin;
+  final int durationDay;
+  final int durationHour;
+  final int durationMin;
 
   ScheduledNotificationParams({
     required this.messageId,
@@ -254,7 +275,6 @@ class ScheduledNotificationParams {
     this.durationMin = 0,
   });
 }
-
 
 class NotificationParams {
   final int messageId;

@@ -60,7 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 PaddedElevatedButton(
                   buttonText: 'Cancel notification',
                   onPressed: () async {
-                    await LocalNotification.instance.cancelNotification(0);
+                    await LocalNotification.instance.cancelNotification(1);
+                  },
+                ),
+                PaddedElevatedButton(
+                  buttonText: 'list notification',
+                  onPressed: () async {
+                    await LocalNotification.instance.getAndroidChannels();
                   },
                 ),
               ],
