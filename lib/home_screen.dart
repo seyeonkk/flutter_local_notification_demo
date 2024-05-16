@@ -33,7 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 PaddedElevatedButton(
                   buttonText: 'Show notification',
                   onPressed: () async {
-                    await LocalNotification.instance.showNotification(messageId: 0);
+                    final params =
+                        NotificationParams(messageId: 0, channelId: 'I');
+                    await LocalNotification.instance.showNotification(params);
                   },
                 ),
                 if (kIsWeb || !Platform.isLinux) ...[
@@ -41,14 +43,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     buttonText: 'Schedule notification to appear in 10 seconds '
                         'based on local time zone',
                     onPressed: () async {
-                      await LocalNotification.instance.zonedScheduleNotification(
-                        messageId: 0,
+                      final params = ScheduledNotificationParams(
+                        messageId: 1,
+                        channelId: 'I',
                         year: 2024,
                         month: 5,
-                        day: 15,
+                        day: 16,
                         hour: 21,
                         minute: 15,
                       );
+                      await LocalNotification.instance
+                          .zonedScheduleNotification(params);
                     },
                   ),
                 ],

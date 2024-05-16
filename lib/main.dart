@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:local_notification_demo/home_screen.dart';
 import 'package:local_notification_demo/local_notification.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -12,12 +13,9 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   localNotification.initialize(
     channels: [
-      AndroidNotificationChannelInfo(
-        id: 'I',
-        title: '일반 알림',
-        playSound: true,
-        sound: 'default_sound',
-        enableVibration: false,
+      const AndroidNotificationChannel(
+        'I',
+        '일반 알림',
       ),
     ],
   );

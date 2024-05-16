@@ -1,30 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-
-class AndroidNotificationChannelInfo {
-  final String id;
-  final String title;
-  final String? description;
-  final bool playSound;
-  final String sound;
-  final bool enableVibration;
-  final Int64List? vibrationPattern;
-
-  AndroidNotificationChannelInfo({
-    required this.id,
-    required this.title,
-    required this.playSound,
-    required this.sound,
-    required this.enableVibration,
-    this.vibrationPattern,
-    this.description,
-  });
-}
 
 class LocalNotification {
   static LocalNotification instance = LocalNotification._();
@@ -36,8 +15,7 @@ class LocalNotification {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  Future<void> initialize(
-      {List<AndroidNotificationChannelInfo>? channels}) async {
+  Future<void> initialize({List<AndroidNotificationChannel>? channels}) async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -87,23 +65,12 @@ class LocalNotification {
     }
   }
 
-  Future<void> showNotification({
-    required int messageId,
-    String? title,
-    String? body,
-    String? payload,
-    String? channelId = 'I',
-    String? icon,
-    String? largeIcon,
-    Color? color,
-    String? sound,
-    bool colorized = false,
-  }) async {
+  Future<void> showNotification(NotificationParams params) async {
     AndroidNotificationChannel? targetChannel;
     if (_androidChannels?.isNotEmpty ?? false) {
-      if (channelId != null) {
+      if (params.channelId != null) {
         targetChannel = _androidChannels
-            ?.firstWhereOrNull((channel) => channel.id == channelId);
+            ?.firstWhereOrNull((channel) => channel.id == params.channelId);
       }
     } else {
       // Android 8.0 이상에 필요한 채널 세부정보가 포함됨
@@ -113,7 +80,7 @@ class LocalNotification {
           enableLights: true,
           enableVibration: false,
           showBadge: true,
-          sound: RawResourceAndroidNotificationSound(sound ?? 'default_sound'),
+          sound: RawResourceAndroidNotificationSound(params.sound ?? 'default_sound'),
           playSound: true);
     }
     if (targetChannel == null) {
@@ -127,8 +94,8 @@ class LocalNotification {
       channelDescription: targetChannel.description,
       importance: Importance.max,
       priority: Priority.high,
-      color: color,
-      icon: icon,
+      color: params.color,
+      icon: params.icon,
       playSound: targetChannel.playSound,
       enableVibration: targetChannel.enableVibration,
       //sound: targetChannel.sound,
@@ -142,9 +109,9 @@ class LocalNotification {
       iOS: darwinNotificationDetails,
     );
     await _plugin.show(
-      messageId,
-      title ?? 'scheduled title',
-      body ?? 'scheduled body',
+      params.messageId,
+      params.title ?? 'scheduled title',
+      params.body ?? 'scheduled body',
       notificationDetails,
     );
   }
@@ -153,41 +120,43 @@ class LocalNotification {
     await _plugin.cancel(messageId);
   }
 
-  Future<void> zonedScheduleNotification({
-    required int messageId,
-    String? title,
-    String? body,
-    String? payload,
-    String? channelId,
-    String? channelName,
-    String? channelDescription,
-    String? icon,
-    String? largeIcon,
-    Color? color,
-    String? sound,
-    required int year,
-    required int month,
-    required int day,
-    required int hour,
-    required int minute,
-    int durationDay = 0,
-    int durationHour = 0,
-    int durationMin = 0,
-    bool colorized = false,
-  }) async {
+  Future<void> zonedScheduleNotification(ScheduledNotificationParams params) async {
+    AndroidNotificationChannel? targetChannel;
+    if (_androidChannels?.isNotEmpty ?? false) {
+      if (params.channelId != null) {
+        targetChannel = _androidChannels
+            ?.firstWhereOrNull((channel) => channel.id == params.channelId);
+      }
+    } else {
+      // Android 8.0 이상에 필요한 채널 세부정보가 포함됨
+      targetChannel = AndroidNotificationChannel(
+          'flutter_local_notification', 'flutter_local_notification', // title
+          importance: Importance.high,
+          enableLights: true,
+          enableVibration: false,
+          showBadge: true,
+          sound: RawResourceAndroidNotificationSound(
+              params.sound ?? 'default_sound'),
+          playSound: true);
+    }
+    if (targetChannel == null) {
+      return;
+    }
+
     await _plugin.zonedSchedule(
-        messageId,
-        title ?? 'scheduled title',
-        body ?? 'scheduled body',
+        params.messageId,
+        params.title ?? 'scheduled title',
+        params.body ?? 'scheduled body',
         tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)),
         // tz.TZDateTime(tz.local, year, month, day, hour, minute).subtract(
         //     Duration(
         //         days: durationDay, hours: durationHour, minutes: durationMin)),
+
         NotificationDetails(
             android: AndroidNotificationDetails(
-          channelId ?? 'your channel id',
-          channelName ?? 'your channel name',
-          channelDescription: channelDescription,
+          targetChannel.id,
+          targetChannel.name,
+          channelDescription: targetChannel.description,
         )),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
@@ -195,7 +164,7 @@ class LocalNotification {
   }
 
   Future<void> _configureAndroidChannels(
-      List<AndroidNotificationChannelInfo> channelInfo) async {
+      List<AndroidNotificationChannel> channelInfo) async {
     AndroidFlutterLocalNotificationsPlugin? androidPlugin =
         _plugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
@@ -226,15 +195,15 @@ class LocalNotification {
             null) {
           await androidPlugin.createNotificationChannel(
             AndroidNotificationChannel(
-              info.id, info.title,
+              info.id,
+              info.name,
               description: info.description,
-              // description
               importance: Importance.high,
               enableLights: true,
               enableVibration: info.enableVibration,
               vibrationPattern: info.vibrationPattern,
               showBadge: true,
-              sound: RawResourceAndroidNotificationSound(info.sound),
+              sound: info.sound,
               playSound: info.playSound,
             ),
           );
@@ -242,4 +211,73 @@ class LocalNotification {
       },
     );
   }
+}
+
+class ScheduledNotificationParams {
+  final int messageId;
+  final String? channelId;
+  final String? title;
+  final String? body;
+  final String? payload;
+  final String? icon;
+  final String? largeIcon;
+  final Color? color;
+  final String? sound;
+  final bool colorized;
+  final int year;
+  final int month;
+  final int day;
+  final int hour;
+  final int minute;
+  final int? durationDay;
+  final int? durationHour;
+  final int? durationMin;
+
+  ScheduledNotificationParams({
+    required this.messageId,
+    this.channelId,
+    required this.year,
+    required this.month,
+    required this.day,
+    required this.hour,
+    required this.minute,
+    this.title,
+    this.body,
+    this.payload,
+    this.icon,
+    this.largeIcon,
+    this.color,
+    this.sound,
+    this.colorized = false,
+    this.durationDay = 0,
+    this.durationHour = 0,
+    this.durationMin = 0,
+  });
+}
+
+
+class NotificationParams {
+  final int messageId;
+  final String? channelId;
+  final String? title;
+  final String? body;
+  final String? payload;
+  final String? icon;
+  final String? largeIcon;
+  final Color? color;
+  final String? sound;
+  final bool colorized;
+
+  NotificationParams({
+    required this.messageId,
+    this.channelId,
+    this.title,
+    this.body,
+    this.payload,
+    this.icon,
+    this.largeIcon,
+    this.color,
+    this.sound,
+    this.colorized = false,
+  });
 }
