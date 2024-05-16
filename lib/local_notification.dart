@@ -32,6 +32,7 @@ class LocalNotification {
 
     // 안드로이드 channel 셋팅
     if (Platform.isAndroid && channels != null) {
+      // param으로 들어온 channel로 갈아치우기
       await _configureAndroidChannels(channels);
 
       AndroidFlutterLocalNotificationsPlugin? androidPlugin =
